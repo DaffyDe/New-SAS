@@ -1,0 +1,98 @@
+﻿
+@{
+    
+    ViewData["Title"] = "Attendance Dashboard";
+}
+
+<style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+    .dashboard-container { max-width: 1000px; margin: 0 auto; background-color: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 30px; }
+    h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; }
+    .row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .col-half { flex: 1; min-width: 300px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+    input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+    input:focus { border-color: #3498db; outline: none; }
+    .btn-add { width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .btn-add:hover { background-color: #2980b9; }
+    .table-wrapper { overflow-x: auto; border: 1px solid #eee; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background-color: #34495e; color: white; }
+    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+    tbody tr:hover { background-color: #f1f1f1; }
+</style>
+
+<div class="dashboard-container">
+    <h2>🎓 Student Attendance System</h2>
+
+    <div class="row">
+        <div class="col-half">
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #eee;">
+                <h3 style="margin-top:0; font-size: 18px; color: #555;">Add New Student</h3>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="nameInput" placeholder="E.g. John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Roll Number</label>
+                    <input type="text" id="rollInput" placeholder="E.g. 101">
+                </div>
+                <button class="btn-add" onclick="addStudent()">+ Add Student</button>
+            </div>
+        </div>
+
+        <div class="col-half">
+            <h3 style="font-size: 18px; color: #555;">Class List</h3>
+            <div class="table-wrapper">
+                <table id="studentTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Roll No</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", loadStudents);
+
+    function loadStudents() {
+        fetch('/Students/GetAll')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.querySelector("#studentTable tbody");
+                tableBody.innerHTML = ""; 
+                data.forEach(student => {
+                    const row = `<tr><td>${student.id}</td><td><strong>${student.name}</strong></td><td>${student.rollNumber}</td></tr>`;
+                    tableBody.innerHTML += row;
+                });
+            });
+    }
+
+    function addStudent() {
+        const name = document.getElementById("nameInput").value;
+        const roll = document.getElementById("rollInput").value;
+        if(!name || !roll) { alert("Please fill in all fields"); return; }
+
+        const studentData = { name: name, rollNumber: roll };
+        fetch('/Students/Create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(studentData)
+        })
+        .then(response => {
+            if (response.ok) {
+                document.getElementById("nameInput").value = "";
+                document.getElementById("rollInput").value = "";
+                loadStudents();
+            } else { alert("Error adding student"); }
+        });
+    }
+</script>
